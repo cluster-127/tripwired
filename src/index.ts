@@ -1,5 +1,5 @@
 /**
- * Tripwire - Behavioral Control Kernel v0.2
+ * Tripwired - Behavioral Control Kernel v0.2
  * LLM Agent Kill-Switch
  */
 

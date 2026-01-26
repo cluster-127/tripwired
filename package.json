@@ -1,7 +1,6 @@
 {
-  "name": "tripwire",
-  "version": "0.2.0",
-  "private": true,
+  "name": "tripwired",
+  "version": "0.1.0",
   "type": "module",
   "description": "Behavioral control kernel for autonomous systems",
   "main": "dist/index.js",
@@ -19,9 +18,28 @@
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
+    "ai-safety",
+    "llm",
+    "agent",
+    "kill-switch",
     "behavioral-control",
-    "risk-management",
-    "autonomous-systems"
+    "autonomous-agents",
+    "guardrails",
+    "safety"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cluster-127/tripwired.git"
+  },
+  "homepage": "https://github.com/cluster-127/tripwired",
+  "bugs": {
+    "url": "https://github.com/cluster-127/tripwired/issues"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "author": "Erdem Arslan <me@erdem.work>",
   "devDependencies": {

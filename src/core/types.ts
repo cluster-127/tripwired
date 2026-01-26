@@ -1,5 +1,5 @@
 /**
- * Tripwire Core Types - v0.2
+ * Tripwired Core Types - v0.2
  * LLM Agent Kill-Switch Types
  *
  * Behavioral control for autonomous AI agents

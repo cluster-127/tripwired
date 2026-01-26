@@ -1,4 +1,4 @@
-# tripwire — Master Specification
+# Tripwired — Master Specification
 
 **Version**: v0.2
 **Date**: 2026-01-26

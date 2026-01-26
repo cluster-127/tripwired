@@ -1,5 +1,5 @@
 /**
- * Tripwire Runtime Pipeline - v0.2
+ * Tripwired Runtime Pipeline - v0.2
  * Agent event processing orchestrator
  */
 

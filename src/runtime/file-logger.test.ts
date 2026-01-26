@@ -1,5 +1,5 @@
 /**
- * Tripwire FileLogger Tests - v0.2
+ * Tripwired FileLogger Tests - v0.2
  */
 
 import { existsSync, readFileSync, rmSync } from 'fs'

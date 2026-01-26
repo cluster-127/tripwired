@@ -1,5 +1,5 @@
 /**
- * Tripwire Intent Core - v0.2
+ * Tripwired Intent Core - v0.2
  * Agent action intent assessment
  *
  * Determines: CONTINUE, PAUSE, or STOP based on activity state

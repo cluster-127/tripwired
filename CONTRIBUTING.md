@@ -1,6 +1,6 @@
-# Contributing to Tripwire
+# Contributing to Tripwired
 
-Thank you for your interest in contributing to Tripwire! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to Tripwired! This document provides guidelines for contributing to the project.
 
 ## Code of Conduct
 
@@ -50,8 +50,8 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```bash
 # Clone the repo
-git clone https://github.com/cluster-127/tripwire.git
-cd tripwire
+git clone https://github.com/cluster-127/tripwired.git
+cd tripwired
 
 # Install dependencies
 pnpm install

@@ -1,5 +1,5 @@
 /**
- * @tripwire/runtime - File Logger
+ * @tripwired/runtime - File Logger
  * Export Pipeline events to JSON file for telemetry
  */
 

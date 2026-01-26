@@ -1,5 +1,5 @@
 /**
- * Tripwire Safety Gate - v0.2
+ * Tripwired Safety Gate - v0.2
  * Final gate before agent action
  *
  * Enforces: Token budget, API rate limits, loop/runaway vetoes

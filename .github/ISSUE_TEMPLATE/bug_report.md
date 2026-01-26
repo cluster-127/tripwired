@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in Tripwire
+about: Report a bug in Tripwired
 title: '[BUG] '
 labels: bug
 assignees: ''
@@ -28,7 +28,7 @@ What actually happens.
 
 - Node.js version:
 - OS:
-- Tripwire version:
+- Tripwired version:
 
 ## Additional Context
 

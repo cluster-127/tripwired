@@ -1,27 +1,27 @@
-# TRIPWIRE
+# TRIPWIRED
 
 **Behavioral control kernel for autonomous AI agents**
 
 ---
 
-## What is Tripwire?
+## What is Tripwired?
 
-**Tripwire is not an AI agent framework.**
+**Tripwired is not an AI agent framework.**
 It is a behavioral control kernel designed to observe autonomous AI agents and determine **when they should stop acting**.
 
-Tripwire does not generate strategies, optimize outcomes, or execute actions.
+Tripwired does not generate strategies, optimize outcomes, or execute actions.
 It monitors behavior over time, detects loss of control, and triggers **early, explainable intervention**.
 
 Autonomous agents rarely fail because of a single bad decision.
 They fail because they **continue acting after they should have stopped**.
 
-Tripwire exists to catch that moment.
+Tripwired exists to catch that moment.
 
 ---
 
-## What Tripwire is NOT
+## What Tripwired is NOT
 
-Tripwire is intentionally narrow in scope.
+Tripwired is intentionally narrow in scope.
 
 It is **not**:
 
@@ -31,34 +31,34 @@ It is **not**:
 - an execution engine
 - a platform or workflow orchestrator
 
-Tripwire does not tell agents **what to do**.
+Tripwired does not tell agents **what to do**.
 It tells them **when to stop**.
 
 ---
 
 ## Core Idea
 
-Tripwire treats autonomous behavior as a signal, not outcomes.
+Tripwired treats autonomous behavior as a signal, not outcomes.
 
 Instead of asking:
 
 - "Is this output correct?"
 - "Is this optimal?"
 
-Tripwire asks:
+Tripwired asks:
 
 - "Is control degrading?"
 - "Is behavior accelerating?"
 - "Are anomalies accumulating?"
 - "Should this agent continue acting?"
 
-When the answer becomes uncertain, Tripwire intervenes early.
+When the answer becomes uncertain, Tripwired intervenes early.
 
 ---
 
-## How Tripwire Works
+## How Tripwired Works
 
-Tripwire operates as a deterministic decision pipeline:
+Tripwired operates as a deterministic decision pipeline:
 
 ```
 AgentEvent
@@ -68,7 +68,7 @@ AgentEvent
         → Intervention Signal
 ```
 
-Key signals Tripwire monitors:
+Key signals Tripwired monitors:
 
 - **Token acceleration**: Token consumption rate increasing faster than expected
 - **Tempo compression**: Decisions occurring at increasing frequency
@@ -88,7 +88,7 @@ Key properties:
 
 ## Intervention Model
 
-Tripwire supports two forms of intervention:
+Tripwired supports two forms of intervention:
 
 - **Soft suspend (PAUSE)**
   New actions are blocked while observation continues.
@@ -127,7 +127,7 @@ Used for: production control, safety-critical automation
 
 ## Design Philosophy
 
-Tripwire is built around the following principles:
+Tripwired is built around the following principles:
 
 - **Early stop > late recovery**
 - **Behavior > outcome**
@@ -140,9 +140,9 @@ Silent failure is not—continuing when you should have stopped is irreversible.
 
 ---
 
-## Where Tripwire Fits
+## Where Tripwired Fits
 
-Tripwire is designed for any system that:
+Tripwired is designed for any system that:
 
 - acts autonomously
 - operates continuously
@@ -203,7 +203,7 @@ COOLDOWN_DURATION_MS: 60_000
 
 ## Status
 
-Tripwire v0.2 is an experimental kernel under active development.
+Tripwired v0.2 is an experimental kernel under active development.
 
 - APIs may change
 - Defaults are intentionally conservative
@@ -216,7 +216,7 @@ This project is designed to be **embedded**, not extended.
 
 ## Closing Note
 
-Tripwire does not make agents smarter.
+Tripwired does not make agents smarter.
 It makes them **safer**.
 
 If your agent can act on its own,

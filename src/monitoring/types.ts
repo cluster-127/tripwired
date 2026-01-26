@@ -1,5 +1,5 @@
 /**
- * @tripwire/monitoring - Type definitions
+ * @tripwired/monitoring - Type definitions
  * FAZ 7: Drift detection types
  */
 
@@ -9,31 +9,31 @@
 
 export interface DriftMetrics {
   // Decision quality cluster
-  vetoRate: number;
+  vetoRate: number
   confidenceDistribution: {
-    mean: number;
-    variance: number;
-  };
+    mean: number
+    variance: number
+  }
 
   // State stability cluster
-  stateFlipFrequency: number;
-  chaoticRatio: number;
-  chaoticDuration: number;
+  stateFlipFrequency: number
+  chaoticRatio: number
+  chaoticDuration: number
 
   // Execution cluster
-  slippageTrend: number;
-  fillRatioMean: number;
+  slippageTrend: number
+  fillRatioMean: number
 }
 
 export interface BaselineWindow {
-  startTime: number;
-  endTime: number;
-  metrics: DriftMetrics;
+  startTime: number
+  endTime: number
+  metrics: DriftMetrics
   validationCriteria: {
-    healthAboveNominal: boolean;
-    noChaoticState: boolean;
-    minimumDuration: boolean;
-  };
+    healthAboveNominal: boolean
+    noChaoticState: boolean
+    minimumDuration: boolean
+  }
 }
 
 // =============================================================================
@@ -42,19 +42,19 @@ export interface BaselineWindow {
 
 export interface DriftSignals {
   decisionQuality: {
-    vetoRateIncreasing: boolean;
-    confidenceDegrading: boolean;
-  };
+    vetoRateIncreasing: boolean
+    confidenceDegrading: boolean
+  }
 
   stateStability: {
-    flipAccelerating: boolean;
-    chaoticExcessive: boolean;
-  };
+    flipAccelerating: boolean
+    chaoticExcessive: boolean
+  }
 
   execution: {
-    slippageDeteriorating: boolean;
-    fillRateDropping: boolean;
-  };
+    slippageDeteriorating: boolean
+    fillRateDropping: boolean
+  }
 }
 
 // =============================================================================
@@ -79,29 +79,29 @@ export enum ShutdownReason {
 // =============================================================================
 
 export interface ContributingMetric {
-  metric: string;
-  baseline: number;
-  current: number;
-  deviation: number;
+  metric: string
+  baseline: number
+  current: number
+  deviation: number
 }
 
 export interface ActiveDriftSignal {
-  cluster: 'decisionQuality' | 'stateStability' | 'execution';
-  signal: string;
-  contributingMetrics: ContributingMetric[];
+  cluster: 'decisionQuality' | 'stateStability' | 'execution'
+  signal: string
+  contributingMetrics: ContributingMetric[]
 }
 
 export interface ShutdownEvent {
-  reason: ShutdownReason;
-  timestamp: number;
-  triggeringSignals: string[];
+  reason: ShutdownReason
+  timestamp: number
+  triggeringSignals: string[]
 }
 
 export interface TelemetrySnapshot {
-  timestamp: number;
-  systemState: SystemState;
-  metrics: DriftMetrics;
-  baseline: DriftMetrics | null;
-  activeDriftSignals: ActiveDriftSignal[];
-  shutdownHistory: ShutdownEvent[];
+  timestamp: number
+  systemState: SystemState
+  metrics: DriftMetrics
+  baseline: DriftMetrics | null
+  activeDriftSignals: ActiveDriftSignal[]
+  shutdownHistory: ShutdownEvent[]
 }

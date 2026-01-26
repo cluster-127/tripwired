@@ -1,6 +1,6 @@
 /**
- * @tripwire/core
- * Shared types and contracts for the trading tripwire
+ * @tripwired/core
+ * Shared types and contracts for the trading tripwired
  */
 
 // Types

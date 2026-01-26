@@ -1,5 +1,5 @@
 /**
- * Tripwire Core Contracts - v0.2
+ * Tripwired Core Contracts - v0.2
  * LLM Agent Kill-Switch Configuration
  *
  * These values are FROZEN - do not modify at runtime

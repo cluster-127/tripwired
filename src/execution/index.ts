@@ -1,8 +1,7 @@
 /**
- * @tripwire/execution
+ * @tripwired/execution
  * Execution adapter module
  */
 
-export { DummyAdapter, LiveAdapter } from './adapter.js';
-export type { ExecutionAdapter } from './adapter.js';
-
+export { DummyAdapter, LiveAdapter } from './adapter.js'
+export type { ExecutionAdapter } from './adapter.js'

@@ -1,11 +1,11 @@
 /**
- * @tripwire/core tests
+ * @tripwired/core tests
  */
 
 import { describe, expect, it } from 'vitest'
 import { HEALTH_THRESHOLDS, deepFreeze } from './index.js'
 
-describe('@tripwire/core contracts', () => {
+describe('@tripwired/core contracts', () => {
   describe('HEALTH_THRESHOLDS', () => {
     it('should have SOFT_SUSPEND > HARD_STOP', () => {
       expect(HEALTH_THRESHOLDS.SOFT_SUSPEND).toBeGreaterThan(HEALTH_THRESHOLDS.HARD_STOP)

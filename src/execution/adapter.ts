@@ -1,5 +1,5 @@
 /**
- * Tripwire Execution Adapter - v0.2
+ * Tripwired Execution Adapter - v0.2
  * Agent action execution interface
  */
 

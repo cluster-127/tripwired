@@ -1,5 +1,5 @@
 /**
- * Tripwire Activity Engine - v0.2
+ * Tripwired Activity Engine - v0.2
  * Agent behavioral state classification
  *
  * Detects: IDLE, WORKING, LOOPING, RUNAWAY modes

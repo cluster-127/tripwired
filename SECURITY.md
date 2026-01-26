@@ -16,7 +16,7 @@ We will respond within 48 hours and work with you to understand and address the 
 
 ## Security Best Practices
 
-When using Tripwire:
+When using Tripwired:
 
 1. **Keep dependencies updated** - Run `pnpm audit` regularly
 2. **Review configuration** - Ensure thresholds are appropriate for your use case

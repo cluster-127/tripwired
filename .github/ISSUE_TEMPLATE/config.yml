@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/cluster-127/tripwire/blob/main/docs/specification.md
+    url: https://github.com/cluster-127/tripwired/blob/main/docs/specification.md
     about: Read the specification before opening an issue

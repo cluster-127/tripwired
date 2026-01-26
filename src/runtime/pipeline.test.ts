@@ -1,5 +1,5 @@
 /**
- * Tripwire Pipeline Tests - v0.2
+ * Tripwired Pipeline Tests - v0.2
  */
 
 import { beforeEach, describe, expect, it } from 'vitest'
