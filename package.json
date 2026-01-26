@@ -1,0 +1,32 @@
+{
+  "name": "tripwire",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Behavioral control kernel for autonomous systems",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "behavioral-control",
+    "risk-management",
+    "autonomous-systems"
+  ],
+  "author": "Erdem Arslan <me@erdem.work>",
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  }
+}
