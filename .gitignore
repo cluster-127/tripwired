@@ -37,3 +37,6 @@ temp/
 
 # NPM token (never commit)
 .npmrc
+
+# Local files (not for repo)
+*.local.md
