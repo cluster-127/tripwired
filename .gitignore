@@ -22,6 +22,8 @@ Thumbs.db
 npm-debug.log*
 pnpm-debug.log*
 logs/
+*.jsonl
+kernel_*.txt
 
 # Test coverage
 coverage/

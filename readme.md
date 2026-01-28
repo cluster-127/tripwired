@@ -127,20 +127,32 @@ Used for: production control, safety-critical automation
 - Runs deterministically on historical data
 - Answers: _"When should this agent have stopped?"_
 
-### LLM Safety Brain (Experimental)
+### LLM Safety Brain + Rust Kernel
 
-Tripwired can use a local LLM to analyze system logs for anomalies:
+Tripwired includes a high-performance Rust kernel for real-time log analysis:
 
 ```
-Log → Regex Pre-Filter → LLM (Llama 3.2) → KILL/SUSTAIN → SIGKILL
+Log → Regex Pre-Filter (3μs) → LLM (Llama 3.2) → KILL/SUSTAIN → SIGKILL
+        ↓                           ↓
+    Safe logs                  Anomaly detected
+    (instant bypass)           (~164ms decision)
 ```
 
-**Benchmark** (AMD RX 6700, Llama 3.2 3B):
+**Architecture:**
 
-- Normal logs: **0ms** (pre-filtered)
-- Anomaly detection: **~130ms**
+- **Rust Sidecar** - Zero-GC, deterministic latency
+- **Named Pipe / Unix Socket** - Native IPC (TCP fallback)
+- **Audit Trail** - Immutable JSONL with model fingerprinting
 
-See [docs/llm-safety-brain-benchmark.md](docs/llm-safety-brain-benchmark.md) for details.
+**Benchmark** (Llama 3.2 3B, AMD RX 6700):
+
+| Scenario            | Latency     |
+| ------------------- | ----------- |
+| Pre-filtered (safe) | **0.003ms** |
+| Cold start          | 467ms       |
+| Warm (anomaly)      | **164ms**   |
+
+See [CHANGELOG.md](CHANGELOG.md) for details.
 
 ---
 
