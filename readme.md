@@ -127,6 +127,21 @@ Used for: production control, safety-critical automation
 - Runs deterministically on historical data
 - Answers: _"When should this agent have stopped?"_
 
+### LLM Safety Brain (Experimental)
+
+Tripwired can use a local LLM to analyze system logs for anomalies:
+
+```
+Log → Regex Pre-Filter → LLM (Llama 3.2) → KILL/SUSTAIN → SIGKILL
+```
+
+**Benchmark** (AMD RX 6700, Llama 3.2 3B):
+
+- Normal logs: **0ms** (pre-filtered)
+- Anomaly detection: **~130ms**
+
+See [docs/llm-safety-brain-benchmark.md](docs/llm-safety-brain-benchmark.md) for details.
+
 ---
 
 ## Design Philosophy
