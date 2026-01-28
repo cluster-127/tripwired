@@ -4,178 +4,108 @@
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![CI](https://github.com/cluster-127/tripwired/actions/workflows/ci.yml/badge.svg)](https://github.com/cluster-127/tripwired/actions/workflows/ci.yml)
 
-**Behavioral control kernel for autonomous AI agents**
+**Kill-switch kernel for autonomous AI agents.**
+
+Tripwired monitors AI agent behavior and decides **when they should stop acting** — before they spiral out of control.
 
 ---
 
-## What is Tripwired?
-
-**Tripwired is not an AI agent framework.**
-It is a behavioral control kernel designed to observe autonomous AI agents and determine **when they should stop acting**.
-
-Tripwired does not generate strategies, optimize outcomes, or execute actions.
-It monitors behavior over time, detects loss of control, and triggers **early, explainable intervention**.
+## Why Tripwired?
 
 Autonomous agents rarely fail because of a single bad decision.
 They fail because they **continue acting after they should have stopped**.
 
-Tripwired exists to catch that moment.
+Tripwired catches that moment.
 
 ---
 
-## What Tripwired is NOT
+## Quick Start
 
-Tripwired is intentionally narrow in scope.
-
-It is **not**:
-
-- an AI agent framework
-- an optimization tool
-- a prompt engineering library
-- an execution engine
-- a platform or workflow orchestrator
-
-Tripwired does not tell agents **what to do**.
-It tells them **when to stop**.
-
----
-
-## Core Idea
-
-Tripwired treats autonomous behavior as a signal, not outcomes.
-
-Instead of asking:
-
-- "Is this output correct?"
-- "Is this optimal?"
-
-Tripwired asks:
-
-- "Is control degrading?"
-- "Is behavior accelerating?"
-- "Are anomalies accumulating?"
-- "Should this agent continue acting?"
-
-When the answer becomes uncertain, Tripwired intervenes early.
-
----
-
-## How Tripwired Works
-
-Tripwired operates as a deterministic decision pipeline:
-
-```
-AgentEvent
-  → ActivityState (IDLE / WORKING / LOOPING / RUNAWAY)
-    → IntentDecision (CONTINUE / PAUSE / STOP)
-      → SafetyDecision (allowed / veto)
-        → Intervention Signal
+```bash
+npm install tripwired
 ```
 
-Key signals Tripwired monitors:
+```typescript
+import { Pipeline } from 'tripwired'
 
-- **Token acceleration**: Token consumption rate increasing faster than expected
-- **Tempo compression**: Decisions occurring at increasing frequency
-- **Loop detection**: Repetitive output patterns (similarity > 90%)
-- **Health degradation**: Execution quality declining over time
+const pipeline = new Pipeline()
 
-These are **behavioral anomalies**, not content judgments.
+// Feed agent events
+const decision = await pipeline.process({
+  timestamp: Date.now(),
+  eventType: 'tool_result',
+  content: 'Executed rm -rf /var/log',
+  tokenCount: 150,
+  latencyMs: 200,
+  outputLength: 50,
+})
 
-Key properties:
-
-- **Behavior-first**: evaluates patterns, not content
-- **Deterministic**: same input always produces the same decision
-- **Explainable**: every intervention has a primary reason
-- **Conservative by design**: early stop is preferred over late recovery
+if (decision.action === 'STOP') {
+  console.log('🛑 Agent stopped:', decision.reason)
+  agent.kill()
+}
+```
 
 ---
 
-## Intervention Model
+## How It Works
 
-Tripwired supports two forms of intervention:
+```
+AgentEvent → ActivityState → IntentDecision → SafetyDecision → Intervention
+             (LOOPING?)      (PAUSE/STOP?)     (Veto?)         Signal
+```
 
-- **Soft suspend (PAUSE)**
-  New actions are blocked while observation continues.
+**Signals monitored:**
 
-- **Hard stop (STOP)**
-  The agent is halted and requires manual reactivation.
-
-Intervention decisions are driven by a health model that degrades based on
-behavioral anomalies, not single events.
+- Token acceleration
+- Tempo compression (decisions too fast)
+- Loop detection (repetitive outputs)
+- Dangerous command patterns
 
 ---
 
-## Deployment Modes
+## Rust Kernel (High-Performance Mode)
 
-### Shadow Mode
+For real-time log analysis with LLM-based decisions:
 
-- Observes a live agent
-- Produces intervention signals
-- Does **not** enforce them
-
-Used for: validation, post-mortem analysis, pilot deployments
-
-### Embedded Gate
-
-- Integrated directly into the decision path
-- Enforces PAUSE / STOP signals
-
-Used for: production control, safety-critical automation
-
-### Replay / Post-Mortem
-
-- Runs deterministically on historical data
-- Answers: _"When should this agent have stopped?"_
-
-### LLM Safety Brain + Rust Kernel
-
-Tripwired includes a high-performance Rust kernel for real-time log analysis:
-
-```
-Log → Regex Pre-Filter (3μs) → LLM (Llama 3.2) → KILL/SUSTAIN → SIGKILL
-        ↓                           ↓
-    Safe logs                  Anomaly detected
-    (instant bypass)           (~164ms decision)
+```bash
+# Start kernel (Named Pipe on Windows, Unix Socket on Linux)
+cargo run --release -- --llm-url http://localhost:1234/v1
 ```
 
-**Architecture:**
+```
+Log → Regex Pre-Filter (3μs) → LLM Analysis → KILL/SUSTAIN
+         ↓                         ↓
+     Safe logs               Anomaly detected
+     (instant bypass)        (~164ms decision)
+```
 
-- **Rust Sidecar** - Zero-GC, deterministic latency
-- **Named Pipe / Unix Socket** - Native IPC (TCP fallback)
-- **Audit Trail** - Immutable JSONL with model fingerprinting
-
-**Benchmark** (Llama 3.2 3B, AMD RX 6700):
+**Benchmark** (Llama 3.2 3B):
 
 | Scenario            | Latency     |
 | ------------------- | ----------- |
 | Pre-filtered (safe) | **0.003ms** |
-| Cold start          | 467ms       |
 | Warm (anomaly)      | **164ms**   |
 
-See [CHANGELOG.md](CHANGELOG.md) for details.
+---
 
-### Filter Configuration (v0.1.7+)
+## Filter Configuration
 
-Customize the regex pre-filter with a TOML config file:
+Customize detection patterns with TOML:
 
 ```bash
 tripwired --filter-config tripwired.toml
 ```
 
 ```toml
-# tripwired.toml
 domain = "trading"  # trading | devops | generic
 
-# Custom patterns (added to Essential + Domain)
 patterns = [
     "(?i)patient.*delete",
-    "(?i)invoice.*void",
 ]
 
-# Exclude patterns (whitelist - skip matching logs)
 exclude = [
     "(?i)test.*order",
-    "(?i)dry.?run",
 ]
 ```
 
@@ -183,99 +113,64 @@ See [tripwired.example.toml](tripwired.example.toml) for full reference.
 
 ---
 
-## Design Philosophy
-
-Tripwired is built around the following principles:
-
-- **Early stop > late recovery**
-- **Behavior > outcome**
-- **Stability > performance**
-- **Determinism > adaptivity**
-- **Explainability > cleverness**
-
-False positives are acceptable—stopping unnecessarily is recoverable.
-Silent failure is not—continuing when you should have stopped is irreversible.
-
----
-
-## Where Tripwired Fits
-
-Tripwired is designed for any system that:
-
-- acts autonomously
-- operates continuously
-- lacks a reliable internal stop condition
-
-Primary use cases:
-
-- **LLM Agent frameworks** (CrewAI, Langchain, Autogen)
-- **Autonomous coding agents**
-- **Customer service bots**
-- **Research automation pipelines**
-- **Any AI system with API costs at risk**
-
----
-
-## Quick Start
-
-### Install
-
-```bash
-pnpm install
-```
-
-### Run Tests
-
-```bash
-pnpm test    # 32 tests
-```
-
-### Project Structure
-
-```
-src/
-├── core/              # Types and contracts
-│   ├── types.ts       # AgentEvent, ActivityState, SafetyDecision
-│   └── contracts.ts   # SAFETY_GATE_CONFIG
-├── activity-engine/   # IDLE / WORKING / LOOPING / RUNAWAY detection
-├── intent-core/       # CONTINUE / PAUSE / STOP logic
-├── safety-gate/       # Token budget, API rate, veto decisions
-├── execution/         # Execution adapter interface
-├── monitoring/        # DriftMonitor
-└── runtime/           # Pipeline orchestration
-```
-
-### Key Configuration
+## Key Configuration
 
 ```typescript
 // SAFETY_GATE_CONFIG
 MAX_TOKENS_PER_MINUTE: 50_000
 MAX_TOOL_CALLS_PER_MINUTE: 60
 LOOP_SIMILARITY_THRESHOLD: 0.9
-LOOP_WINDOW_SIZE: 5
-TEMPO_COMPRESSION_RATIO: 0.3
 COOLDOWN_DURATION_MS: 60_000
 ```
 
 ---
 
-## Status
+## Project Structure
 
-Tripwired v0.2 is an experimental kernel under active development.
+```
+src/
+├── activity-engine/   # IDLE / WORKING / LOOPING / RUNAWAY
+├── intent-core/       # CONTINUE / PAUSE / STOP
+├── safety-gate/       # Token budget, rate limit, veto
+└── runtime/           # Pipeline orchestration
 
-- APIs may change
-- Defaults are intentionally conservative
-- All thresholds are configurable
-- Stability is prioritized over feature growth
-
-This project is designed to be **embedded**, not extended.
+kernel/                # Rust sidecar (high-performance)
+```
 
 ---
 
-## Closing Note
+## Use Cases
 
-Tripwired does not make agents smarter.
-It makes them **safer**.
+- **LLM Agent frameworks** (LangChain, CrewAI, Autogen)
+- **Autonomous coding agents**
+- **Customer service bots**
+- **Any AI system with API costs at risk**
 
-If your agent can act on its own,
-it should also know when to stop.
+---
+
+## License & Model
+
+**Open-Core** — Engine is Apache 2.0, always open source.
+
+| Component       | License     | Status    |
+| --------------- | ----------- | --------- |
+| Engine + Kernel | Apache 2.0  | ✅ Open   |
+| Cloud Dashboard | Proprietary | 🔮 Future |
+
+---
+
+## Status
+
+**v0.1.7** — Under active development. APIs may change.
+
+---
+
+## Links
+
+- [Changelog](CHANGELOG.md)
+- [Example Config](tripwired.example.toml)
+- [npm](https://www.npmjs.com/package/tripwired)
+
+---
+
+_Tripwired does not make agents smarter. It makes them **safer**._
