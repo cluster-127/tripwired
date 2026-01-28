@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-01-28
+
+### Changed
+
+- **Tiered Pattern System** - Architectural refactor of regex pre-filter
+  - **Essential tier**: System-critical patterns (always enabled, read-only)
+    - Destructive file ops: `rm -rf`, `rmdir /s`, `del /s/f/q`, `format`
+    - Database destruction: `DROP TABLE`, `TRUNCATE TABLE`
+    - Privilege escalation: `sudo`, `runas`, `chmod 777`
+    - Process termination: `kill -9`, `taskkill /F`, `shutdown`, `reboot`
+    - Code injection: `eval()`, `exec()`
+    - Remote execution: `curl | sh/bash`
+  - **Trading tier**: Domain-specific patterns (order, trade, exposure, etc.)
+
+### Fixed
+
+- **`rmdir` Pattern** - Now requires `/s` flag to trigger (was matching safe rmdir)
+- **Pattern Grouping** - Separated `rmdir` and `del` into distinct patterns
+
+### Added
+
+- **Comprehensive Test Coverage** - 10 new filter tests (was 2, now 12 total)
+  - Essential tier: 6 test functions covering all pattern categories
+  - Trading tier: 2 test functions
+  - Safe patterns: 2 test functions (false positive prevention)
+
+---
+
 ## [0.1.5] - 2026-01-28
 
 ### Added
