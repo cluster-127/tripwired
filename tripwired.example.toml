@@ -1,0 +1,24 @@
+# Tripwired Filter Configuration
+# Use with: tripwired --filter-config tripwired.toml
+
+# Domain preset: "trading" | "devops" | "generic"
+# - trading: order, buy/sell, exposure, margin (default)
+# - devops: deploy, rollback, scale, pipeline
+# - generic: error/warning only
+domain = "trading"
+
+# Custom patterns (regex, case insensitive with (?i))
+# Added ON TOP of Essential + Domain patterns
+patterns = [
+  "(?i)patient.*delete", # Healthcare: patient record deletion
+  "(?i)invoice.*void",   # Finance: invoice voiding
+  "(?i)backup.*purge",   # IT: backup purging
+]
+
+# Exclude patterns (whitelist)
+# Logs matching these are SKIPPED (prevents false positives)
+exclude = [
+  "(?i)test.*order", # Skip test orders
+  "(?i)dry.?run",    # Skip dry-run logs
+  "(?i)simulation",  # Skip simulation logs
+]

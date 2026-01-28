@@ -154,6 +154,33 @@ Log → Regex Pre-Filter (3μs) → LLM (Llama 3.2) → KILL/SUSTAIN → SIGKILL
 
 See [CHANGELOG.md](CHANGELOG.md) for details.
 
+### Filter Configuration (v0.1.7+)
+
+Customize the regex pre-filter with a TOML config file:
+
+```bash
+tripwired --filter-config tripwired.toml
+```
+
+```toml
+# tripwired.toml
+domain = "trading"  # trading | devops | generic
+
+# Custom patterns (added to Essential + Domain)
+patterns = [
+    "(?i)patient.*delete",
+    "(?i)invoice.*void",
+]
+
+# Exclude patterns (whitelist - skip matching logs)
+exclude = [
+    "(?i)test.*order",
+    "(?i)dry.?run",
+]
+```
+
+See [tripwired.example.toml](tripwired.example.toml) for full reference.
+
 ---
 
 ## Design Philosophy
