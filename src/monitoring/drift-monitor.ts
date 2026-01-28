@@ -57,6 +57,25 @@ export class DriftMonitor {
   private systemState: SystemState = State.RUNNING
   private shutdownHistory: ShutdownEvent[] = []
 
+  // Rolling window data (bounded arrays)
+  private readonly decisionWindow: Array<{
+    wasVetoed: boolean
+    confidence: number
+    timestamp: number
+  }> = []
+  private readonly stateTransitions: Array<{ from: string; to: string; timestamp: number }> = []
+  private readonly executionResults: Array<{
+    slippage: number
+    fillRatio: number
+    timestamp: number
+  }> = []
+  private static readonly MAX_WINDOW_SIZE = 1000
+
+  // State tracking
+  private lastChaoticStart: number | null = null
+  private totalChaoticDuration = 0
+  private currentMode: string = 'IDLE'
+
   // Baseline collection state
   private baselineCollectionStart: number | null = null
   private baselineHealthAboveNominal = true
@@ -74,16 +93,55 @@ export class DriftMonitor {
    * Record decision event for drift tracking
    */
   recordDecision(params: { wasVetoed: boolean; confidence: number; timestamp: number }): void {
-    // Update metrics...
-    // (Implementation will track rolling window)
+    // Add to rolling window
+    this.decisionWindow.push(params)
+
+    // Prune old entries (keep within time window)
+    const cutoff = params.timestamp - DRIFT_CONFIG.METRICS_WINDOW_MS
+    while (this.decisionWindow.length > 0 && this.decisionWindow[0]!.timestamp < cutoff) {
+      this.decisionWindow.shift()
+    }
+
+    // Enforce max size
+    while (this.decisionWindow.length > DriftMonitor.MAX_WINDOW_SIZE) {
+      this.decisionWindow.shift()
+    }
+
+    // Recalculate metrics
+    this.updateDecisionMetrics()
   }
 
   /**
    * Record state transition for stability tracking
    */
   recordStateTransition(params: { from: string; to: string; timestamp: number }): void {
-    // Update state flip frequency
-    // Track CHAOTIC duration
+    // Add to rolling window
+    this.stateTransitions.push(params)
+
+    // Prune old entries
+    const cutoff = params.timestamp - DRIFT_CONFIG.METRICS_WINDOW_MS
+    while (this.stateTransitions.length > 0 && this.stateTransitions[0]!.timestamp < cutoff) {
+      this.stateTransitions.shift()
+    }
+
+    // Track CHAOTIC/RUNAWAY duration
+    const isChaotic = params.to === 'LOOPING' || params.to === 'RUNAWAY'
+    const wasChaotic = params.from === 'LOOPING' || params.from === 'RUNAWAY'
+
+    if (isChaotic && !wasChaotic) {
+      // Entering chaotic state
+      this.lastChaoticStart = params.timestamp
+      this.baselineHadChaotic = true
+    } else if (!isChaotic && wasChaotic && this.lastChaoticStart !== null) {
+      // Exiting chaotic state
+      this.totalChaoticDuration += params.timestamp - this.lastChaoticStart
+      this.lastChaoticStart = null
+    }
+
+    this.currentMode = params.to
+
+    // Recalculate metrics
+    this.updateStateMetrics(params.timestamp)
   }
 
   /**
@@ -102,7 +160,70 @@ export class DriftMonitor {
    * Record execution result for execution cluster
    */
   recordExecution(params: { slippage: number; fillRatio: number; timestamp: number }): void {
-    // Update execution metrics
+    // Add to rolling window
+    this.executionResults.push(params)
+
+    // Prune old entries
+    const cutoff = params.timestamp - DRIFT_CONFIG.METRICS_WINDOW_MS
+    while (this.executionResults.length > 0 && this.executionResults[0]!.timestamp < cutoff) {
+      this.executionResults.shift()
+    }
+
+    // Recalculate metrics
+    this.updateExecutionMetrics()
+  }
+
+  // ===========================================================================
+  // METRIC CALCULATION
+  // ===========================================================================
+
+  private updateDecisionMetrics(): void {
+    if (this.decisionWindow.length === 0) return
+
+    // Veto rate: proportion of vetoed decisions
+    const vetoCount = this.decisionWindow.filter((d) => d.wasVetoed).length
+    this.currentMetrics.vetoRate = vetoCount / this.decisionWindow.length
+
+    // Confidence distribution
+    const confidences = this.decisionWindow.map((d) => d.confidence)
+    const mean = confidences.reduce((a, b) => a + b, 0) / confidences.length
+    const variance =
+      confidences.reduce((sum, c) => sum + Math.pow(c - mean, 2), 0) / confidences.length
+
+    this.currentMetrics.confidenceDistribution = { mean, variance }
+  }
+
+  private updateStateMetrics(now: number): void {
+    if (this.stateTransitions.length === 0) return
+
+    // State flip frequency: transitions per minute
+    const windowStart = this.stateTransitions[0]!.timestamp
+    const windowDuration = now - windowStart
+    const transitionsPerMinute =
+      windowDuration > 0 ? (this.stateTransitions.length / windowDuration) * 60_000 : 0
+
+    this.currentMetrics.stateFlipFrequency = transitionsPerMinute
+
+    // Chaotic ratio: time spent in LOOPING/RUNAWAY
+    let chaoticDuration = this.totalChaoticDuration
+    if (this.lastChaoticStart !== null) {
+      chaoticDuration += now - this.lastChaoticStart
+    }
+
+    this.currentMetrics.chaoticDuration = chaoticDuration
+    this.currentMetrics.chaoticRatio = windowDuration > 0 ? chaoticDuration / windowDuration : 0
+  }
+
+  private updateExecutionMetrics(): void {
+    if (this.executionResults.length === 0) return
+
+    // Slippage trend: average slippage (higher = worse)
+    const slippages = this.executionResults.map((e) => e.slippage)
+    this.currentMetrics.slippageTrend = slippages.reduce((a, b) => a + b, 0) / slippages.length
+
+    // Fill ratio mean
+    const fillRatios = this.executionResults.map((e) => e.fillRatio)
+    this.currentMetrics.fillRatioMean = fillRatios.reduce((a, b) => a + b, 0) / fillRatios.length
   }
 
   /**

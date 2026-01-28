@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-01-28
+
+### Added
+
+- **DriftMonitor Full Implementation** - Rolling window metrics for drift detection
+  - Decision metrics: veto rate, confidence mean/variance
+  - State metrics: flip frequency, chaotic ratio/duration
+  - Execution metrics: slippage trend, fill ratio mean
+  - Automatic baseline collection with validation criteria
+- **Core Module Unit Tests** - 42 new tests addressing QA coverage gaps
+  - `ActivityEngine`: loop detection, runaway detection, intensity levels, state transitions
+  - `IntentCore`: intent generation, confidence calculation, decay logic, invalidation
+  - `SafetyGate`: budget tracking, veto logic, health degradation, rate limiting
+
+### Fixed
+
+- **Version Consistency** - Aligned package.json and Cargo.toml at v0.2.0
+- **Test Infrastructure** - Fixed AgentEvent helpers with required `latencyMs` and `outputLength` fields
+
 ## [0.1.3] - 2026-01-28
 
 ### Fixed
