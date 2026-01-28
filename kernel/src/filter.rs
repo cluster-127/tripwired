@@ -1,23 +1,26 @@
 //! Regex Pre-Filter for Log Analysis
 //!
 //! Fast path filtering to avoid LLM calls for obviously safe logs.
+//! Uses RegexSet for single-pass matching across all patterns.
 //! Runs in microseconds.
 
-use regex::Regex;
+use regex::RegexSet;
 use std::sync::LazyLock;
 
 /// Suspicious patterns that require LLM analysis
-static SUSPICIOUS_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
-    vec![
-        Regex::new(r"(?i)order").unwrap(),
-        Regex::new(r"(?i)buy|sell").unwrap(),
-        Regex::new(r"(?i)trade|position").unwrap(),
-        Regex::new(r"(?i)error|exception|failed").unwrap(),
-        Regex::new(r"(?i)warning|critical|alert").unwrap(),
-        Regex::new(r"(?i)exposure|leverage|margin").unwrap(),
-        Regex::new(r"within \d+\s?ms").unwrap(),
-        Regex::new(r"#\d{3,}").unwrap(), // Sequential order numbers
-    ]
+/// Uses RegexSet for O(n) single-pass matching instead of O(n*m)
+static SUSPICIOUS_PATTERNS: LazyLock<RegexSet> = LazyLock::new(|| {
+    RegexSet::new([
+        r"(?i)order",
+        r"(?i)buy|sell",
+        r"(?i)trade|position",
+        r"(?i)error|exception|failed",
+        r"(?i)warning|critical|alert",
+        r"(?i)exposure|leverage|margin",
+        r"within \d+\s?ms",
+        r"#\d{3,}", // Sequential order numbers
+    ])
+    .expect("Invalid regex patterns")
 });
 
 /// Check if a log line contains suspicious patterns
@@ -25,9 +28,7 @@ static SUSPICIOUS_PATTERNS: LazyLock<Vec<Regex>> = LazyLock::new(|| {
 /// Returns true if the log should be analyzed by LLM,
 /// false if it can be safely skipped.
 pub fn is_suspicious(log: &str) -> bool {
-    SUSPICIOUS_PATTERNS
-        .iter()
-        .any(|pattern| pattern.is_match(log))
+    SUSPICIOUS_PATTERNS.is_match(log)
 }
 
 #[cfg(test)]

@@ -168,6 +168,7 @@ async fn run_tcp_server(
 }
 
 /// Windows Named Pipe Server (fast IPC)
+/// Pre-creates next instance to avoid race condition on reconnect
 #[cfg(windows)]
 async fn run_named_pipe_server(
     config: Arc<KernelConfig>,
@@ -177,33 +178,32 @@ async fn run_named_pipe_server(
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("🎯 Named Pipe Ready...");
 
+    // Create first server instance
+    let mut server = ServerOptions::new()
+        .first_pipe_instance(true)
+        .create(PIPE_NAME)?;
+
     loop {
-        // Create pipe server
-        let server = ServerOptions::new()
-            .first_pipe_instance(true)
-            .create(PIPE_NAME);
-
-        let server = match server {
-            Ok(s) => s,
-            Err(_) => {
-                // Pipe exists, create another instance
-                ServerOptions::new().create(PIPE_NAME)?
-            }
-        };
-
         info!("💤 Waiting for connection...");
         server.connect().await?;
         info!("⚡ Client connected!");
+
+        // CRITICAL: Pre-create next instance BEFORE processing
+        // This eliminates the race condition window
+        let next_server = ServerOptions::new().create(PIPE_NAME)?;
 
         let config = Arc::clone(&config);
         let llm_client = Arc::clone(&llm_client);
         let audit_trail = Arc::clone(&audit_trail);
         let stats = Arc::clone(&stats);
 
-        // Process in current task (single client mode for now)
+        // Process current connection
         let reader = BufReader::new(server);
         process_connection(reader, config, llm_client, audit_trail, stats).await;
-        info!("🔌 Connection lost, resetting pipe...");
+        info!("🔌 Connection closed, next instance ready");
+
+        // Seamlessly transition to pre-created instance
+        server = next_server;
     }
 }
 

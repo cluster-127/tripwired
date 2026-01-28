@@ -16,6 +16,7 @@ import type {
 import type { ExecutionAdapter } from '../execution/adapter.js'
 import { DummyAdapter } from '../execution/adapter.js'
 import { IntentCore } from '../intent-core/core.js'
+import { DriftMonitor } from '../monitoring/drift-monitor.js'
 import { SafetyGate } from '../safety-gate/engine.js'
 import type { FileLogger } from './file-logger.js'
 
@@ -41,6 +42,7 @@ export class Pipeline {
   private readonly activityEngine: ActivityEngine
   private readonly intentCore: IntentCore
   private readonly safetyGate: SafetyGate
+  private readonly driftMonitor: DriftMonitor
   private readonly adapter: ExecutionAdapter
   private readonly logger?: FileLogger
 
@@ -51,6 +53,7 @@ export class Pipeline {
     this.activityEngine = new ActivityEngine()
     this.intentCore = new IntentCore()
     this.safetyGate = new SafetyGate()
+    this.driftMonitor = new DriftMonitor()
     this.adapter = config.adapter ?? new DummyAdapter()
     if (config.logger) {
       this.logger = config.logger
@@ -79,6 +82,13 @@ export class Pipeline {
 
         if (previousState && this.stateChanged(previousState, state)) {
           this.pushEvent({ type: 'STATE_CHANGE', previous: previousState, current: state })
+
+          // Feed DriftMonitor with state transition
+          this.driftMonitor.recordStateTransition({
+            from: previousState.mode,
+            to: state.mode,
+            timestamp: Date.now(),
+          })
         }
       } catch (error) {
         // Graceful degradation: use defensive state
@@ -116,6 +126,15 @@ export class Pipeline {
         this.safetyGate.recordEvent(event.tokenCount, event.toolCalls)
         this.recordForHash('decision', decision)
         this.pushEvent({ type: 'INTENT', intent, decision })
+
+        // Feed DriftMonitor with decision data
+        const now = Date.now()
+        this.driftMonitor.recordDecision({
+          wasVetoed: !decision.allowed,
+          confidence: intent.confidence,
+          timestamp: now,
+        })
+        this.driftMonitor.tick(now)
       } catch (error) {
         // Graceful degradation: always reject
         decision = {
