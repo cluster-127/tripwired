@@ -158,13 +158,11 @@ fn now_ms() -> u64 {
 }
 
 fn sha256_hex(input: &str) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
+    use sha2::{Digest, Sha256};
 
-    // Simple hash for now (replace with SHA-256 in production)
-    let mut hasher = DefaultHasher::new();
-    input.hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
+    let mut hasher = Sha256::new();
+    hasher.update(input.as_bytes());
+    format!("{:x}", hasher.finalize())
 }
 
 #[cfg(test)]
@@ -177,7 +175,7 @@ mod tests {
     fn test_model_fingerprint() {
         let fp = ModelFingerprint::new("llama-3.2", "http://localhost:1234/v1", 30, 0.0);
         assert!(fp.fingerprint().starts_with("llama-3.2@"));
-        assert_eq!(fp.config_hash.len(), 16);
+        assert_eq!(fp.config_hash.len(), 64); // SHA-256 = 64 hex chars
     }
 
     #[test]

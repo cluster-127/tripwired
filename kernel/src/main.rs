@@ -306,6 +306,20 @@ async fn process_connection<R: tokio::io::AsyncRead + Unpin>(
                     }
 
                     s.kills += 1;
+                } else if decision.action == "FAIL" {
+                    // CRITICAL: LLM response was unparseable - uncertainty is not safety!
+                    warn!("═══════════════════════════════════════════════════════════════");
+                    warn!("  ⚠️ PARSE FAILURE - LLM response unclear");
+                    warn!("═══════════════════════════════════════════════════════════════");
+                    warn!("  Decision ID: {}", record_id);
+                    warn!("  Latency: {}ms", latency_ms);
+                    warn!(
+                        "  Raw response: {}",
+                        &decision.raw_response[..decision.raw_response.len().min(100)]
+                    );
+                    warn!("═══════════════════════════════════════════════════════════════");
+                    // NOTE: Not killing, but flagging for manual review
+                    // Future: Could integrate with health degradation in Node.js layer
                 } else {
                     info!("🟢 [SUSTAIN] ID:{} {}ms", record_id, latency_ms);
                 }

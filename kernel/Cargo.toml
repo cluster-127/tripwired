@@ -34,6 +34,9 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 # Error handling
 anyhow = "1"
 
+# Cryptographic hashing (audit trail)
+sha2 = "0.10"
+
 [profile.release]
 lto = true
 codegen-units = 1

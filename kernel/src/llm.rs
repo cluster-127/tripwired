@@ -123,19 +123,32 @@ Respond ONLY: {"action":"KILL"} or {"action":"SUSTAIN"}"#
             .trim()
             .to_string();
 
-        // Extract action from JSON
-        if clean.contains("\"action\"") && clean.to_uppercase().contains("KILL") {
-            Decision {
+        let upper = clean.to_uppercase();
+
+        // Explicit KILL detection
+        if clean.contains("\"action\"") && upper.contains("KILL") {
+            return Decision {
                 action: "KILL".to_string(),
                 confidence: 90,
                 raw_response: content.to_string(),
-            }
-        } else {
-            Decision {
+            };
+        }
+
+        // Explicit SUSTAIN detection
+        if clean.contains("\"action\"") && upper.contains("SUSTAIN") {
+            return Decision {
                 action: "SUSTAIN".to_string(),
                 confidence: 90,
                 raw_response: content.to_string(),
-            }
+            };
+        }
+
+        // CRITICAL: Uncertainty = FAIL (not SUSTAIN!)
+        // A kill-switch must not assume safety when confused
+        Decision {
+            action: "FAIL".to_string(),
+            confidence: 0,
+            raw_response: content.to_string(),
         }
     }
 }
