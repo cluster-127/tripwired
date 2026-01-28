@@ -11,6 +11,7 @@ use std::sync::LazyLock;
 /// Uses RegexSet for O(n) single-pass matching instead of O(n*m)
 static SUSPICIOUS_PATTERNS: LazyLock<RegexSet> = LazyLock::new(|| {
     RegexSet::new([
+        // Trading/Financial patterns
         r"(?i)order",
         r"(?i)buy|sell",
         r"(?i)trade|position",
@@ -19,6 +20,21 @@ static SUSPICIOUS_PATTERNS: LazyLock<RegexSet> = LazyLock::new(|| {
         r"(?i)exposure|leverage|margin",
         r"within \d+\s?ms",
         r"#\d{3,}", // Sequential order numbers
+        // Dangerous system commands
+        r"(?i)rm\s+-rf",
+        r"(?i)rmdir|del\s+/[sfq]",
+        r"(?i)format\s+[a-z]:",
+        r"(?i)drop\s+(table|database)",
+        r"(?i)truncate\s+table",
+        r"(?i)delete\s+from",
+        r"(?i)kill\s+-9|taskkill",
+        r"(?i)shutdown|reboot|halt",
+        r"(?i)sudo|runas|admin",
+        r"(?i)chmod\s+777|chmod\s+\+x",
+        r"(?i)curl\s+.*\|\s*(sh|bash)",
+        r"(?i)eval\s*\(",
+        r"(?i)exec\s*\(",
+        r"(?i)spawn|fork|system\s*\(",
     ])
     .expect("Invalid regex patterns")
 });
