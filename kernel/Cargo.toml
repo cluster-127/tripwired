@@ -1,6 +1,6 @@
 [package]
 name = "tripwire-kernel"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 description = "Deterministic kill-switch kernel for autonomous agents"
 license = "Apache-2.0"
@@ -36,6 +36,9 @@ anyhow = "1"
 
 # Cryptographic hashing (audit trail)
 sha2 = "0.10"
+
+# Config file parsing
+toml = "0.8"
 
 [profile.release]
 lto = true

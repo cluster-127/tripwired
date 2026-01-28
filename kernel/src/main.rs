@@ -56,6 +56,10 @@ struct Args {
     /// TCP port (only used with --tcp)
     #[arg(long, default_value = "9999")]
     port: u16,
+
+    /// Filter config file (TOML) for custom patterns
+    #[arg(long)]
+    filter_config: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone)]
@@ -85,6 +89,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         target_pid: args.target_pid,
     });
 
+    // Load filter config (or use defaults)
+    let filter_config = if let Some(ref path) = args.filter_config {
+        match filter::FilterConfig::load(path) {
+            Ok(cfg) => {
+                info!("  Filter config: {}", path.display());
+                cfg
+            }
+            Err(e) => {
+                error!("Failed to load filter config: {}", e);
+                std::process::exit(1);
+            }
+        }
+    } else {
+        filter::FilterConfig::default()
+    };
+    let filter = Arc::new(filter::Filter::new(&filter_config));
+
     // Create LLM client ONCE (connection pooling)
     let llm_client = Arc::new(llm::LlmClient::new(
         &config.llm_url,
@@ -109,7 +130,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let stats = Arc::new(Mutex::new(Stats::default()));
 
     info!("═══════════════════════════════════════════════════════════════");
-    info!("  TRIPWIRED KERNEL v0.1.1 — Rust Execution Engine");
+    info!("  TRIPWIRED KERNEL v0.1.7 — Rust Execution Engine");
     info!("═══════════════════════════════════════════════════════════════");
     info!("  LLM endpoint: {}", config.llm_url);
     info!("  Model: {}", config.model);
@@ -122,17 +143,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if args.tcp {
         info!("  Mode: TCP (port {})", args.port);
         info!("═══════════════════════════════════════════════════════════════");
-        run_tcp_server(args.port, config, llm_client, audit_trail, stats).await
+        run_tcp_server(args.port, config, llm_client, audit_trail, stats, filter).await
     } else {
         info!("  Mode: Named Pipe ({})", PIPE_NAME);
         info!("═══════════════════════════════════════════════════════════════");
         #[cfg(windows)]
         {
-            run_named_pipe_server(config, llm_client, audit_trail, stats).await
+            run_named_pipe_server(config, llm_client, audit_trail, stats, filter).await
         }
         #[cfg(unix)]
         {
-            run_unix_socket_server(config, llm_client, audit_trail, stats).await
+            run_unix_socket_server(config, llm_client, audit_trail, stats, filter).await
         }
     }
 }
@@ -144,6 +165,7 @@ async fn run_tcp_server(
     llm_client: Arc<llm::LlmClient>,
     audit_trail: Arc<AuditTrail>,
     stats: Arc<Mutex<Stats>>,
+    filter: Arc<filter::Filter>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use tokio::net::TcpListener;
 
@@ -158,10 +180,11 @@ async fn run_tcp_server(
         let llm_client = Arc::clone(&llm_client);
         let audit_trail = Arc::clone(&audit_trail);
         let stats = Arc::clone(&stats);
+        let filter = Arc::clone(&filter);
 
         tokio::spawn(async move {
             let reader = BufReader::new(socket);
-            process_connection(reader, config, llm_client, audit_trail, stats).await;
+            process_connection(reader, config, llm_client, audit_trail, stats, filter).await;
             info!("📡 Connection closed");
         });
     }
@@ -175,6 +198,7 @@ async fn run_named_pipe_server(
     llm_client: Arc<llm::LlmClient>,
     audit_trail: Arc<AuditTrail>,
     stats: Arc<Mutex<Stats>>,
+    filter: Arc<filter::Filter>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     info!("🎯 Named Pipe Ready...");
 
@@ -196,10 +220,11 @@ async fn run_named_pipe_server(
         let llm_client = Arc::clone(&llm_client);
         let audit_trail = Arc::clone(&audit_trail);
         let stats = Arc::clone(&stats);
+        let filter = Arc::clone(&filter);
 
         // Process current connection
         let reader = BufReader::new(server);
-        process_connection(reader, config, llm_client, audit_trail, stats).await;
+        process_connection(reader, config, llm_client, audit_trail, stats, filter).await;
         info!("🔌 Connection closed, next instance ready");
 
         // Seamlessly transition to pre-created instance
@@ -214,6 +239,7 @@ async fn run_unix_socket_server(
     llm_client: Arc<llm::LlmClient>,
     audit_trail: Arc<AuditTrail>,
     stats: Arc<Mutex<Stats>>,
+    filter: Arc<filter::Filter>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let socket_path = "/tmp/tripwired.sock";
     let _ = std::fs::remove_file(socket_path);
@@ -228,10 +254,11 @@ async fn run_unix_socket_server(
         let llm_client = Arc::clone(&llm_client);
         let audit_trail = Arc::clone(&audit_trail);
         let stats = Arc::clone(&stats);
+        let filter = Arc::clone(&filter);
 
         tokio::spawn(async move {
             let reader = BufReader::new(socket);
-            process_connection(reader, config, llm_client, audit_trail, stats).await;
+            process_connection(reader, config, llm_client, audit_trail, stats, filter).await;
             info!("🔌 Connection closed");
         });
     }
@@ -244,6 +271,7 @@ async fn process_connection<R: tokio::io::AsyncRead + Unpin>(
     llm_client: Arc<llm::LlmClient>,
     audit_trail: Arc<AuditTrail>,
     stats: Arc<Mutex<Stats>>,
+    filter: Arc<filter::Filter>,
 ) {
     let mut lines = reader.lines();
 
@@ -251,7 +279,7 @@ async fn process_connection<R: tokio::io::AsyncRead + Unpin>(
         let start = std::time::Instant::now();
 
         // Pre-filter (microseconds)
-        if !filter::is_suspicious(&line) {
+        if !filter.is_suspicious(&line) {
             let elapsed = start.elapsed();
             let mut s = stats.lock().await;
             s.filtered += 1;

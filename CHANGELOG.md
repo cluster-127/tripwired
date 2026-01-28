@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2026-01-28
+
+### Added
+
+- **FilterConfig System** - User-configurable filter patterns via TOML
+  - `--filter-config <path>` CLI flag for custom config file
+  - Domain presets: `trading`, `devops`, `generic`
+  - `patterns`: Add custom regex patterns
+  - `exclude`: Whitelist patterns to skip (false positive prevention)
+- **Container/Orchestration Patterns** (Essential tier)
+  - `docker --privileged` - Privileged container escape risk
+  - `kubectl delete --all` - Kubernetes mass deletion
+- **Disk Destruction Patterns** (Essential tier)
+  - `dd if=/dev/zero` - Disk overwrite
+  - `mkfs.*` - Filesystem format
+
+### Changed
+
+- Filter architecture now supports runtime configuration
+- Essential patterns: 17 → 21 patterns (4 new)
+
+---
+
 ## [0.1.6] - 2026-01-28
 
 ### Changed
