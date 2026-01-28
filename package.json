@@ -1,6 +1,6 @@
 {
   "name": "tripwired",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "description": "Behavioral control kernel for autonomous systems",
   "main": "dist/index.js",
