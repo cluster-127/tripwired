@@ -34,7 +34,7 @@ const pipeline = new Pipeline()
 const decision = await pipeline.process({
   timestamp: Date.now(),
   eventType: 'tool_result',
-  content: 'Executed rm -rf /var/log',
+  content: 'Executed database query',
   tokenCount: 150,
   latencyMs: 200,
   outputLength: 50,
@@ -42,7 +42,8 @@ const decision = await pipeline.process({
 
 if (decision.action === 'STOP') {
   console.log('🛑 Agent stopped:', decision.reason)
-  agent.kill()
+  // Your agent shutdown logic here
+  process.exit(1)
 }
 ```
 
